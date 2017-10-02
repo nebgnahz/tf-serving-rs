@@ -1,7 +1,7 @@
 use bytes::{BigEndian, ByteOrder};
 use errors::*;
 use flate2::read::GzDecoder;
-use ndarray::{self, Array1, Array4, ArrayView1, ArrayView4};
+use ndarray::prelude::*;
 use reqwest::{self, Url};
 use std::fs::File;
 use std::io::{self, Read};
@@ -61,7 +61,7 @@ pub fn extract_images<P: AsRef<Path>>(filename: &P) -> Result<Array4<u8>> {
 
     let mut buf = vec![0; rows * cols * num_images];
     gzip.read_exact(&mut buf[..])?;
-    let array = ndarray::arr1(&buf).into_shape((num_images, rows, cols, 1))?;
+    let array = arr1(&buf).into_shape((num_images, rows, cols, 1))?;
     Ok(array)
 }
 
@@ -81,11 +81,11 @@ pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Array1<u8>> {
     gzip.read_exact(&mut buf[..])?;
 
     println!("{} labels", num_items);
-    Ok(ndarray::arr1(&buf))
+    Ok(arr1(&buf))
 }
 
 pub struct DataSet {
-    images: Array4<u8>,
+    images: Array2<f32>,
     labels: Array1<u8>,
 }
 
@@ -109,16 +109,15 @@ pub struct DataSetIter<'a> {
 }
 
 impl<'a> Iterator for DataSetIter<'a> {
-    type Item = (ArrayView4<'a, u8>, ArrayView1<'a, u8>);
+    type Item = (ArrayView2<'a, f32>, ArrayView1<'a, u8>);
     fn next(&mut self) -> Option<Self::Item> {
         let range = (self.index as isize)..((self.index + 1) as isize);
-        let images = self.data.images.slice(s![range, .., .., .., ]);
+        let images = self.data.images.slice(s![range, .., ]);
 
         let range = (self.index as isize)..((self.index + 1) as isize);
         let labels = self.data.labels.slice(s![range]);
 
         self.index = self.index + 1;
-        println!("{}/{}", self.index, self.num_examples);
         if self.index == self.num_examples {
             self.epochs_completed += 1;
             self.index = 0;
@@ -137,8 +136,18 @@ impl DataSet {
         let local_file = maybe_download(TEST_LABELS, &dir)?;
         let test_labels = extract_labels(&local_file)?;
 
+        // Convert shape from [num examples, rows, columns, depth]
+        // to [num examples, rows*columns] (assuming depth == 1)
+        let shape = {
+            let shape = test_images.shape();
+            assert_eq!(shape[3], 1);
+            (shape[0], shape[1], shape[2])
+        };
+
+        let images = test_images.into_shape((shape.0, shape.1 * shape.2))?;
+        let images = images.map(|&i| i as f32 * 1.0 / 255.0);
         Ok(DataSet {
-            images: test_images,
+            images: images,
             labels: test_labels,
         })
     }
