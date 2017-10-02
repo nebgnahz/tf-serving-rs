@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 
-P_ARG="-I=serving -I serving/tensorflow --rust_out=src --grpc_out=src "
-P_ARG+="--plugin=protoc-gen-grpc=`which grpc_rust_plugin` "
+ARG="-I=serving -I serving/tensorflow --rust_out=src --grpc_out=src "
+ARG+="--plugin=protoc-gen-grpc=`which grpc_rust_plugin` "
 
-protoc $P_ARG serving/tensorflow_serving/apis/classification.proto
-protoc $P_ARG serving/tensorflow_serving/apis/get_model_metadata.proto
-protoc $P_ARG serving/tensorflow_serving/apis/inference.proto
-protoc $P_ARG serving/tensorflow_serving/apis/input.proto
-protoc $P_ARG serving/tensorflow_serving/apis/model.proto
-protoc $P_ARG serving/tensorflow_serving/apis/predict.proto
-protoc $P_ARG serving/tensorflow_serving/apis/prediction_service.proto
-protoc $P_ARG serving/tensorflow_serving/apis/regression.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/attr_value.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/function.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/graph.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/node_def.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/op_def.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/resource_handle.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/tensor.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/tensor_shape.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/types.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/framework/versions.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/example/example.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/example/feature.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/protobuf/saver.proto
-protoc $P_ARG serving/tensorflow/tensorflow/core/protobuf/meta_graph.proto
+protoc $ARG serving/tensorflow/tensorflow/core/example/example.proto
+protoc $ARG serving/tensorflow/tensorflow/core/example/feature.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/attr_value.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/function.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/graph.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/node_def.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/op_def.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/resource_handle.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/tensor.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/tensor_shape.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/types.proto
+protoc $ARG serving/tensorflow/tensorflow/core/framework/versions.proto
+protoc $ARG serving/tensorflow/tensorflow/core/protobuf/meta_graph.proto
+protoc $ARG serving/tensorflow/tensorflow/core/protobuf/saver.proto
+protoc $ARG serving/tensorflow_serving/apis/classification.proto
+protoc $ARG serving/tensorflow_serving/apis/get_model_metadata.proto
+protoc $ARG serving/tensorflow_serving/apis/inference.proto
+protoc $ARG serving/tensorflow_serving/apis/input.proto
+protoc $ARG serving/tensorflow_serving/apis/model.proto
+protoc $ARG serving/tensorflow_serving/apis/predict.proto
+protoc $ARG serving/tensorflow_serving/apis/prediction_service.proto
+protoc $ARG serving/tensorflow_serving/apis/regression.proto
