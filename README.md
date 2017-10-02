@@ -16,6 +16,10 @@ An attempt to build tensorflow serving client with Rust:
 ## Update submodule inside submodule.
 git submodule update --init --recursive
 
+## Install the protobuf compiler and gRPC plugin
+cargo install protobuf
+cargo install grpcio-compiler
+
 ## Build protobuf
 ./proto_gen
 ```

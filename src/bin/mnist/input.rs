@@ -1,3 +1,7 @@
+/// Functions for downloading and reading MNIST data.
+///
+/// https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_client.py
+
 use bytes::{BigEndian, ByteOrder};
 use errors::*;
 use flate2::read::GzDecoder;
@@ -84,6 +88,8 @@ pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Array1<u8>> {
     Ok(arr1(&buf))
 }
 
+
+/// Data structure that holds images and corresponding labels
 pub struct DataSet {
     images: Array2<f32>,
     labels: Array1<u8>,

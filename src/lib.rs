@@ -1,5 +1,3 @@
-#![allow(unused_extern_crates)]
-
 extern crate protobuf;
 extern crate futures;
 extern crate grpcio;
