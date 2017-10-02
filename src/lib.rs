@@ -1,10 +1,8 @@
 #![allow(unused_extern_crates)]
 
 extern crate protobuf;
-extern crate grpc;
 extern crate futures;
-extern crate futures_cpupool;
-extern crate tls_api;
+extern crate grpcio;
 
 pub mod attr_value;
 pub mod classification;
