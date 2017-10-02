@@ -1,3 +1,4 @@
+extern crate futures;
 extern crate grpcio;
 extern crate tf_serving;
 extern crate reqwest;
@@ -8,15 +9,17 @@ extern crate bytes;
 #[macro_use]
 extern crate ndarray;
 
-use bytes::ByteOrder;
-use tf_serving as serving;
+use bytes::BufMut;
+use futures::Future;
 use grpcio::{ChannelBuilder, EnvBuilder};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use tf_serving as serving;
 use tf_serving::model::ModelSpec;
 use tf_serving::predict::PredictRequest;
 use tf_serving::prediction_service_grpc::PredictionServiceClient;
 use tf_serving::tensor::TensorProto;
 use tf_serving::tensor_shape::{TensorShapeProto, TensorShapeProto_Dim};
-use std::sync::Arc;
 
 mod errors {
     use reqwest;
@@ -53,7 +56,9 @@ fn run() -> Result<()> {
     let client = PredictionServiceClient::new(ch);
 
     let test_data = input::DataSet::test("/tmp")?;
-    for (image, _label) in test_data.iter().take(1) {
+    let err_counter = AtomicUsize::new(0);
+    let total = 10;
+    for (image, label) in test_data.iter().take(total) {
         let mut model_spec = ModelSpec::new();
         model_spec.set_name("mnist".into());
         model_spec.set_signature_name("predict_images".into());
@@ -79,16 +84,37 @@ fn run() -> Result<()> {
         image_proto.set_tensor_content(encode(tensor_content));
 
         request.inputs.insert("images".into(), image_proto);
-        let response = client.predict(request);
-        println!("{:?}", response);
+        let predict = client.predict_async(request).and_then(|response| {
+            let output = response.get_outputs();
+            let output = output.get("scores").unwrap();
+            let scores = &output.float_val;
+            let max_idx = scores
+                .iter()
+                .enumerate()
+                .max_by(|&(_, x), &(_, y)| x.partial_cmp(y).unwrap())
+                .unwrap();
+
+            if label[0] != max_idx.0 as u8 {
+                err_counter.fetch_add(1, Ordering::SeqCst);
+            }
+            Ok(())
+        });
+
+        predict.wait().unwrap();
     }
+
+    println!(
+        "Error rate: {}%",
+        err_counter.load(Ordering::SeqCst) as f32 / total as f32 * 100.0
+    );
+
     Ok(())
 }
 
 fn encode<'a>(input: &'a [f32]) -> Vec<u8> {
-    let mut buf = vec![0; input.len() * 4];
+    let mut buf = vec![];
     for i in input {
-        bytes::BigEndian::write_f32(&mut buf, *i);
+        buf.put_f32::<bytes::LittleEndian>(*i);
     }
     buf
 }

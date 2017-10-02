@@ -84,7 +84,6 @@ pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Array1<u8>> {
     let mut buf = vec![0; num_items];
     gzip.read_exact(&mut buf[..])?;
 
-    println!("{} labels", num_items);
     Ok(arr1(&buf))
 }
 
