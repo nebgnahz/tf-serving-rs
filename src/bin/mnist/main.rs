@@ -4,6 +4,8 @@ extern crate reqwest;
 extern crate error_chain;
 extern crate flate2;
 extern crate bytes;
+#[macro_use]
+extern crate ndarray;
 
 mod errors {
     use reqwest;
@@ -12,11 +14,16 @@ mod errors {
             Reqwest(reqwest::Error);
             UrlParse(reqwest::UrlError);
             Io(::std::io::Error);
+            ArrayShape(::ndarray::ShapeError);
         }
         errors {
             Server {
                 description("failed to download from the server")
                 display("failed to download from the server")
+            }
+            DataCorruption {
+                description("failed parse downloaded data")
+                display("failed parse downloaded data")
             }
         }
     }
@@ -29,12 +36,9 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let test_images = input::maybe_download(input::TEST_IMAGES, "/tmp")?;
-    let _test_labels = input::maybe_download(input::TEST_LABELS, "/tmp")?;
-    let _train_images = input::maybe_download(input::TRAIN_IMAGES, "/tmp")?;
-    let _train_labels = input::maybe_download(input::TRAIN_LABELS, "/tmp")?;
-
-    let _images = input::extract_images(test_images)?;
-
+    let test = input::DataSet::test("/tmp")?;
+    for (_image, label) in test.iter() {
+        println!("{:?}", label.into_slice());
+    }
     Ok(())
 }
