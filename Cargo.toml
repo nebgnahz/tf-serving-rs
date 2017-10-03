@@ -4,16 +4,23 @@ version = "0.0.1"
 authors = ["Ben Zhang <benzh@cs.berkeley.edu>"]
 
 [dependencies]
-bytes              = "0.4.5"
-error-chain        = "0.11.0"
-flate2             = "0.2"
-futures            = "0.1"
-grpcio             = "0.1"
-ndarray            = "0.10.9"
-protobuf           = { version = "1.*", features = ["with-bytes"] }
-reqwest            = "0.7.3"
-log                = "*"
+bytes       = { version = "0.4.5", optional = true }
+error-chain = "0.11.0"
+flate2      = { version = "0.2", optional = true }
+futures     = "0.1"
+grpcio      = "0.1"
+ndarray     = { version = "0.10.9", optional = true }
+protobuf    = { version = "1.*", features = ["with-bytes"] }
+reqwest     = { version = "0.7.3", optional = true }
+log         = "*"
 
 [features]
-default = ["examples"]
-examples = []
+default = [ "examples" ]
+examples = [ "reqwest", "flate2", "bytes", "ndarray" ]
+
+[dev-dependencies]
+futures-cpupool = "0.1"
+
+[[bin]]
+name = "mnist"
+required-features = ["examples"]
