@@ -3,7 +3,7 @@ TensorFlow Serving
 
 [![Build Status][travis-badge]](https://travis-ci.com/nebgnahz/tf-serving-rs)
 
-[Documentation](https://nebgnahz.github.io/tf-serving-rs/)
+[Documentation](https://nebgnahz.github.io/tf-serving-rs/tf_serving/)
 
 An attempt to build tensorflow serving client with Rust:
 

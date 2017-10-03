@@ -4,23 +4,23 @@ version = "0.0.1"
 authors = ["Ben Zhang <benzh@cs.berkeley.edu>"]
 
 [dependencies]
-bytes       = { version = "0.4.5", optional = true }
 error-chain = "0.11.0"
-flate2      = { version = "0.2", optional = true }
 futures     = "0.1"
 grpcio      = "0.1"
-ndarray     = { version = "0.10.9", optional = true }
-protobuf    = { version = "1.*", features = ["with-bytes"] }
-reqwest     = { version = "0.7.3", optional = true }
 log         = "*"
+protobuf    = { version = "1.*"    , features = ["with-bytes"] }
+
+bytes           = { version = "0.4.5"  , optional = true }
+flate2          = { version = "0.2"    , optional = true }
+futures-cpupool = { version = "0.1"    , optional = true }
+ndarray         = { version = "0.10.9" , optional = true }
+reqwest         = { version = "0.7.3"  , optional = true }
+tokio-core      = { version = "0.1"    , optional = true }
 
 [features]
-default = [ "examples" ]
+default = [ "examples", "runtime" ]
 examples = [ "reqwest", "flate2", "bytes", "ndarray" ]
-
-[dev-dependencies]
-futures-cpupool = "0.1"
+runtime = [ "futures-cpupool", "tokio-core" ]
 
 [[bin]]
 name = "mnist"
-required-features = ["examples"]
