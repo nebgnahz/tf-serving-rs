@@ -4,11 +4,16 @@ version = "0.0.1"
 authors = ["Ben Zhang <benzh@cs.berkeley.edu>"]
 
 [dependencies]
-bytes           = "0.4.5"
-error-chain     = "0.11.0"
-flate2          = "0.2"
-futures         = "0.1"
-grpcio          = "0.1"
-ndarray         = "0.10.9"
-protobuf        = { version = "1.*", features = ["with-bytes"] }
-reqwest         = "0.7.3"
+bytes              = "0.4.5"
+error-chain        = "0.11.0"
+flate2             = "0.2"
+futures            = "0.1"
+grpcio             = "0.1"
+ndarray            = "0.10.9"
+protobuf           = { version = "1.*", features = ["with-bytes"] }
+reqwest            = "0.7.3"
+log                = "*"
+
+[features]
+default = ["examples"]
+examples = []
