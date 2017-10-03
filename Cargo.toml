@@ -24,3 +24,4 @@ runtime = [ "futures-cpupool", "tokio-core" ]
 
 [[bin]]
 name = "mnist"
+required-features = [ "examples", "runtime" ]
