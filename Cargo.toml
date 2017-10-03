@@ -13,13 +13,13 @@ protobuf    = { version = "1.*"    , features = ["with-bytes"] }
 bytes           = { version = "0.4.5"  , optional = true }
 flate2          = { version = "0.2"    , optional = true }
 futures-cpupool = { version = "0.1"    , optional = true }
-ndarray         = { version = "0.10.9" , optional = true }
 reqwest         = { version = "0.7.3"  , optional = true }
 tokio-core      = { version = "0.1"    , optional = true }
+itertools       = { version = "0.6.5"  , optional = true }
 
 [features]
 default = [ "examples", "runtime" ]
-examples = [ "reqwest", "flate2", "bytes", "ndarray" ]
+examples = [ "reqwest", "flate2", "bytes", "itertools" ]
 runtime = [ "futures-cpupool", "tokio-core" ]
 
 [[bin]]

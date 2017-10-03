@@ -13,8 +13,7 @@ extern crate flate2;
 #[cfg(feature = "examples")]
 extern crate bytes;
 #[cfg(feature = "examples")]
-#[macro_use]
-extern crate ndarray;
+extern crate itertools;
 
 pub mod errors {
     #[cfg(feature = "examples")]
@@ -24,7 +23,6 @@ pub mod errors {
             Reqwest(reqwest::Error) #[cfg(feature = "examples")];
             UrlParse(reqwest::UrlError) #[cfg(feature = "examples")];
             Io(::std::io::Error);
-            ArrayShape(::ndarray::ShapeError) #[cfg(feature = "examples")];
             GRPC(::grpcio::Error) #[cfg(feature = "examples")];
         }
         errors {

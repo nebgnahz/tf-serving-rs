@@ -1,16 +1,16 @@
+/// Functions for downloading and reading MNIST data.
+///
+/// https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_client.py
 use super::super::model::ModelSpec;
 use super::super::predict::PredictRequest;
 use super::super::tensor::TensorProto;
 use super::super::tensor_shape::{TensorShapeProto, TensorShapeProto_Dim};
 use super::super::types::DataType;
-/// Functions for downloading and reading MNIST data.
-///
-/// https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_client.py
-
 use bytes::{BigEndian, BufMut, ByteOrder, LittleEndian};
 use errors::*;
 use flate2::read::GzDecoder;
-use ndarray::prelude::*;
+
+use itertools::Itertools;
 use reqwest::{self, Url};
 use std::fs::File;
 use std::io::{self, Read};
@@ -52,8 +52,12 @@ fn read_u32<R: Read>(r: &mut R) -> Result<u32> {
     Ok(BigEndian::read_u32(&buf))
 }
 
+fn normalize(i: u8) -> f32 {
+    i as f32 * 1.0 / 255.0
+}
+
 /// Extract the images into a vector of ndarray Vec<y, x, depth>.
-pub fn extract_images<P: AsRef<Path>>(filename: &P) -> Result<Array4<u8>> {
+pub fn extract_images<P: AsRef<Path>>(filename: &P) -> Result<Vec<Vec<f32>>> {
     info!("Extracting images: {:?}", filename.as_ref());
 
     let file = File::open(filename)?;
@@ -70,12 +74,17 @@ pub fn extract_images<P: AsRef<Path>>(filename: &P) -> Result<Array4<u8>> {
 
     let mut buf = vec![0; rows * cols * num_images];
     gzip.read_exact(&mut buf[..])?;
-    let array = arr1(&buf).into_shape((num_images, rows, cols, 1))?;
+    let array = buf.into_iter()
+        .map(normalize)
+        .chunks(rows * cols)
+        .into_iter()
+        .map(|chunk| chunk.collect::<Vec<_>>())
+        .collect::<Vec<_>>();
     Ok(array)
 }
 
 /// Extract the labels into a 1D uint8 numpy array [index].
-pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Array1<u8>> {
+pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Vec<u8>> {
     info!("Extracting labels: {:?}", filename.as_ref());
 
     let file = File::open(filename)?;
@@ -89,12 +98,12 @@ pub fn extract_labels<P: AsRef<Path>>(filename: P) -> Result<Array1<u8>> {
     let mut buf = vec![0; num_items];
     gzip.read_exact(&mut buf[..])?;
 
-    Ok(arr1(&buf))
+    Ok(buf)
 }
 
 
 /// Data structure that holds images and corresponding labels
-fn to_proto<'a>(image: ArrayView2<'a, f32>) -> TensorProto {
+fn to_proto<'a>(image: &'a [f32]) -> TensorProto {
     let mut image_proto = TensorProto::new();
     image_proto.set_dtype(DataType::DT_FLOAT);
 
@@ -110,54 +119,21 @@ fn to_proto<'a>(image: ArrayView2<'a, f32>) -> TensorProto {
     image_proto.set_tensor_shape(shape);
 
     // Set content
-    let tensor_content = image.into_slice().unwrap();
-    image_proto.set_tensor_content(encode(tensor_content));
+    image_proto.set_tensor_content(encode(&image));
 
     image_proto
 }
 
 
 pub struct DataSet {
-    images: Array2<f32>,
-    labels: Array1<u8>,
+    pairs: Vec<(Vec<f32>, u8)>,
 }
 
-impl DataSet {
-    pub fn iter<'a>(&'a self) -> DataSetIter<'a> {
-        let num = self.images.shape()[0];
-        DataSetIter {
-            data: &self,
-            index: 0,
-            num_examples: num,
-            epochs_completed: 0,
-        }
-    }
-}
+impl ::std::ops::Index<usize> for DataSet {
+    type Output = (Vec<f32>, u8);
 
-pub struct DataSetIter<'a> {
-    data: &'a DataSet,
-    index: usize,
-    num_examples: usize,
-    epochs_completed: usize,
-}
-
-impl<'a> Iterator for DataSetIter<'a> {
-    type Item = (ArrayView2<'a, f32>, ArrayView1<'a, u8>);
-    fn next(&mut self) -> Option<Self::Item> {
-        let range = (self.index as isize)..((self.index + 1) as isize);
-        let images = self.data.images.slice(s![range, .., ]);
-
-        let range = (self.index as isize)..((self.index + 1) as isize);
-        let labels = self.data.labels.slice(s![range]);
-
-        self.index = self.index + 1;
-        if self.index == self.num_examples {
-            self.epochs_completed += 1;
-            self.index = 0;
-            None
-        } else {
-            Some((images, labels))
-        }
+    fn index(&self, i: usize) -> &Self::Output {
+        &self.pairs[i]
     }
 }
 
@@ -169,24 +145,15 @@ impl DataSet {
         let local_file = maybe_download(TEST_LABELS, &dir)?;
         let test_labels = extract_labels(&local_file)?;
 
-        // Convert shape from [num examples, rows, columns, depth]
-        // to [num examples, rows*columns] (assuming depth == 1)
-        let shape = {
-            let shape = test_images.shape();
-            assert_eq!(shape[3], 1);
-            (shape[0], shape[1], shape[2])
-        };
-
-        let images = test_images.into_shape((shape.0, shape.1 * shape.2))?;
-        let images = images.map(|&i| i as f32 * 1.0 / 255.0);
-        Ok(DataSet {
-            images: images,
-            labels: test_labels,
-        })
+        let pairs = test_images
+            .into_iter()
+            .zip(test_labels.into_iter())
+            .collect();
+        Ok(DataSet { pairs: pairs })
     }
 }
 
-pub fn predict_request<'a>(image: ArrayView2<'a, f32>) -> PredictRequest {
+pub fn predict_request<'a>(image: &'a [f32]) -> PredictRequest {
     let mut model_spec = ModelSpec::new();
     model_spec.set_name("mnist".into());
     model_spec.set_signature_name("predict_images".into());

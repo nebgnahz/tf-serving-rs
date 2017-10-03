@@ -29,13 +29,11 @@ fn run() -> Result<()> {
 
     let err_counter = Arc::new(AtomicUsize::new(0));
     let total = 100;
-    let iter = test_data.iter();
 
     let mut tasks = Vec::new();
-
-    for (image, label) in iter.take(total) {
-        let label = label[0];
-        let request = mnist::predict_request(image);
+    for i in 0..total {
+        let (ref image, label) = test_data[i as usize];
+        let request = mnist::predict_request(&image);
         let error = err_counter.clone();
         let predict = client.predict_async(request).and_then(move |response| {
             let output = response.get_outputs();
