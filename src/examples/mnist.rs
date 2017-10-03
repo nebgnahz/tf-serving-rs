@@ -129,6 +129,12 @@ pub struct DataSet {
     pairs: Vec<(Vec<f32>, u8)>,
 }
 
+impl DataSet {
+    pub fn len(&self) -> usize {
+        self.pairs.len()
+    }
+}
+
 impl ::std::ops::Index<usize> for DataSet {
     type Output = (Vec<f32>, u8);
 
