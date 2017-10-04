@@ -1,3 +1,6 @@
+//! TensorFlow Serving APIs generated using gRPC (`grpcio`).
+#![deny(missing_docs)]
+
 extern crate protobuf;
 extern crate futures;
 extern crate grpcio;
@@ -16,6 +19,8 @@ extern crate bytes;
 extern crate itertools;
 
 pub mod errors {
+    #![allow(missing_docs)]
+
     #[cfg(feature = "examples")]
     use reqwest;
     error_chain! {
@@ -50,7 +55,7 @@ pub mod function;
 mod get_model_metadata;
 pub mod graph;
 pub mod inference;
-pub mod input;
+mod input;
 pub mod meta_graph;
 mod model;
 pub mod node_def;

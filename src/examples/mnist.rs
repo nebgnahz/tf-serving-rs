@@ -1,15 +1,16 @@
-/// Functions for downloading and reading MNIST data.
-///
-/// https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_client.py
+//! Functions for downloading, reading, and encoding MNIST data.
+//!
+//! https://github.com/tensorflow/serving/blob/master/tensorflow_serving/example/mnist_client.py
+
 use super::super::model::ModelSpec;
 use super::super::predict::PredictRequest;
 use super::super::tensor::TensorProto;
 use super::super::tensor_shape::{TensorShapeProto, TensorShapeProto_Dim};
 use super::super::types::DataType;
+
 use bytes::{BigEndian, BufMut, ByteOrder, LittleEndian};
 use errors::*;
 use flate2::read::GzDecoder;
-
 use itertools::Itertools;
 use reqwest::{self, Url};
 use std::fs::File;
@@ -17,13 +18,13 @@ use std::io::{self, Read};
 use std::path::{Path, PathBuf};
 
 const SOURCE_URL: &str = "http://yann.lecun.com/exdb/mnist/";
-const _TRAIN_IMAGES: &str = "train-images-idx3-ubyte.gz";
-const _TRAIN_LABELS: &str = "train-labels-idx1-ubyte.gz";
+const TRAIN_IMAGES: &str = "train-images-idx3-ubyte.gz";
+const TRAIN_LABELS: &str = "train-labels-idx1-ubyte.gz";
 const TEST_IMAGES: &str = "t10k-images-idx3-ubyte.gz";
 const TEST_LABELS: &str = "t10k-labels-idx1-ubyte.gz";
 const _VALIDATION_SIZE: usize = 5000;
 
-/// Download the data from Yann's website, unless it's already here.
+/// Download the data from Yann Lecun's website, unless it's already here.
 pub fn maybe_download<P: AsRef<Path>>(filename: &str, dir: &P) -> Result<PathBuf> {
     let mut path = PathBuf::new();
     path.push(dir);
@@ -125,11 +126,34 @@ fn to_proto<'a>(image: &'a [f32]) -> TensorProto {
 }
 
 
+/// A vector of (image, label) pair. Retrieve content by indexing: `dataset[1]`.
 pub struct DataSet {
     pairs: Vec<(Vec<f32>, u8)>,
 }
 
 impl DataSet {
+    /// Loads MNIST training dataset, if it is not present, downloads it.
+    pub fn train<P: AsRef<Path>>(dir: P) -> Result<DataSet> {
+        DataSet::load(dir, TRAIN_IMAGES, TRAIN_LABELS)
+    }
+
+    /// Loads MNIST test dataset, if it is not present, downloads it.
+    pub fn test<P: AsRef<Path>>(dir: P) -> Result<DataSet> {
+        DataSet::load(dir, TEST_IMAGES, TEST_LABELS)
+    }
+
+    fn load<P: AsRef<Path>>(dir: P, img: &str, label: &str) -> Result<DataSet> {
+        let local_file = maybe_download(img, &dir)?;
+        let images = extract_images(&local_file)?;
+
+        let local_file = maybe_download(label, &dir)?;
+        let labels = extract_labels(&local_file)?;
+
+        let pairs = images.into_iter().zip(labels.into_iter()).collect();
+        Ok(DataSet { pairs: pairs })
+    }
+
+    /// Returns the number of images (or labels).
     pub fn len(&self) -> usize {
         self.pairs.len()
     }
@@ -143,22 +167,8 @@ impl ::std::ops::Index<usize> for DataSet {
     }
 }
 
-impl DataSet {
-    pub fn test<P: AsRef<Path>>(dir: P) -> Result<DataSet> {
-        let local_file = maybe_download(TEST_IMAGES, &dir)?;
-        let test_images = extract_images(&local_file)?;
-
-        let local_file = maybe_download(TEST_LABELS, &dir)?;
-        let test_labels = extract_labels(&local_file)?;
-
-        let pairs = test_images
-            .into_iter()
-            .zip(test_labels.into_iter())
-            .collect();
-        Ok(DataSet { pairs: pairs })
-    }
-}
-
+/// Creates a `PredictRequest` from a given image by setting the model name as
+/// "mnist" and encode the image properly.
 pub fn predict_request<'a>(image: &'a [f32]) -> PredictRequest {
     let mut model_spec = ModelSpec::new();
     model_spec.set_name("mnist".into());
