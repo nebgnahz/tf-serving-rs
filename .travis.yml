@@ -1,6 +1,7 @@
 language: rust
 sudo: false
-submodules: false
+git:
+  submodules: false
 
 cache:
   directories:
