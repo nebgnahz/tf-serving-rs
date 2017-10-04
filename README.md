@@ -1,16 +1,12 @@
-TensorFlow Serving
+TensorFlow Serving with Rust
 ---
 
 [![Build Status][travis-badge]](https://travis-ci.com/nebgnahz/tf-serving-rs)
 
 [Documentation](https://nebgnahz.github.io/tf-serving-rs/tf_serving/)
 
-An attempt to build tensorflow serving client with Rust:
-
-- [grpcio](https://github.com/pingcap/grpc-rs) for protocol
-- [tokio](https://tokio.rs/) for runtime
-
-## Instructions
+`src` already contains generated Rust from Tensorflow serving protos. If you
+want to generate from scratch, use the following instructions:
 
 ```sh
 ## Update submodule inside submodule.
