@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["InferenceResult_oneof_result",""]],"fn":[["file_descriptor_proto",""]],"struct":[["InferenceResult",""],["InferenceTask",""],["MultiInferenceRequest",""],["MultiInferenceResponse",""]]});

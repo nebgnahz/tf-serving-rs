@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["SaverDef_CheckpointFormatVersion",""]],"fn":[["file_descriptor_proto",""]],"struct":[["SaverDef",""]]});
